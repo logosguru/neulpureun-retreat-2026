@@ -297,3 +297,239 @@ export function roundSlide(pres, meta, { kicker, size, tickets, ticketIcon, titl
   }
   return s;
 }
+
+// ───────────────────────────── Game 03 · Who Is It? ─────────────────────────────
+
+/** 왼쪽 세로 기둥: 라벨 + 큰 "?" + 진행 표시. 힌트 슬라이드들이 공유. */
+function personColumn(pres, s, { kicker, mark = '?', progress }) {
+  s.addText(kicker, {
+    x: M, y: 1.5, w: 2.9, h: 0.4,
+    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
+  });
+  s.addText(mark, {
+    x: M, y: 1.8, w: 2.9, h: 2.6, align: 'center',
+    fontFace: F.latin, fontSize: 190, bold: true, color: C.ivory, valign: 'top',
+  });
+  if (progress) {
+    // 힌트 진행 점: 지난 것·현재는 금색, 남은 것은 윤곽선
+    const { current, total } = progress;
+    const d = 0.28, gap = 0.14;
+    const x0 = M + (2.9 - (total * d + (total - 1) * gap)) / 2;
+    for (let i = 0; i < total; i++) {
+      const on = i < current;
+      s.addShape(pres.ShapeType.ellipse, {
+        x: x0 + i * (d + gap), y: 4.75, w: d, h: d,
+        fill: on ? { color: C.gold } : { color: C.pine },
+        line: { color: C.gold, width: 1 },
+      });
+    }
+    s.addText(`HINT ${current} / ${total}`, {
+      x: M, y: 5.1, w: 2.9, h: 0.4, align: 'center',
+      fontFace: F.latin, fontSize: 14, color: C.mistDim, charSpacing: 2,
+    });
+  }
+  s.addShape(pres.ShapeType.line, {
+    x: 3.95 - 0.4, y: 1.6, w: 0, h: 4.7,
+    line: { color: C.goldSoft, width: 0.75, transparency: 60 },
+  });
+}
+
+/**
+ * 힌트 슬라이드: 이전 힌트는 위에 작게(흐리게) 쌓이고, 현재 힌트는 아래에 세 언어로 크게.
+ * hints: [{ ko, en, es }] 전체, current: 1부터.
+ */
+export function hintSlide(pres, meta, { kicker, hints, current }) {
+  const s = frame(pres, meta);
+  personColumn(pres, s, { kicker, progress: { current, total: hints.length } });
+  const colX = 3.95, cw = W - M - colX;
+
+  s.addText('HINT · 힌트 · PISTA', {
+    x: colX, y: 0.95, w: 8, h: 0.45,
+    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
+  });
+
+  const prevH = 0.72;
+  let y = 1.45;
+  for (let i = 0; i < current - 1; i++) {
+    const h = hints[i];
+    s.addShape(pres.ShapeType.ellipse, {
+      x: colX, y: y + 0.08, w: 0.4, h: 0.4, fill: { color: C.pine }, line: { color: C.goldSoft, width: 1 },
+    });
+    s.addText(String(i + 1), {
+      x: colX, y: y + 0.08, w: 0.4, h: 0.4, align: 'center', valign: 'middle',
+      fontFace: F.latin, fontSize: 14, bold: true, color: C.goldSoft,
+    });
+    s.addText(
+      [
+        { text: h.ko, options: { fontFace: F.sans, color: C.mist, fontSize: 15, breakLine: true } },
+        { text: `${h.en}   ·   ${h.es}`, options: { fontFace: F.sans, color: C.mistDim, fontSize: 11 } },
+      ],
+      { x: colX + 0.6, y, w: cw - 0.6, h: prevH, valign: 'top', lineSpacingMultiple: 1.05 },
+    );
+    y += prevH;
+  }
+
+  // 현재 힌트 — 남은 높이를 전부 쓴다
+  const h = hints[current - 1];
+  const top = y + (current > 1 ? 0.2 : 0);
+  const avail = 6.65 - top;
+  const big = current <= 2; // 위에 쌓인 것이 적을수록 크게
+  s.addShape(pres.ShapeType.ellipse, {
+    x: colX, y: top + 0.12, w: 0.7, h: 0.7, fill: { color: C.gold }, line: { color: C.gold },
+  });
+  s.addText(String(current), {
+    x: colX, y: top + 0.12, w: 0.7, h: 0.7, align: 'center', valign: 'middle',
+    fontFace: F.latin, fontSize: 26, bold: true, color: C.pineDeep,
+  });
+  s.addText(
+    [
+      { text: h.ko, options: { ...LANG.ko, fontSize: big ? 34 : 28, bold: true, breakLine: true, paraSpaceAfter: 14 } },
+      { text: h.en, options: { fontFace: F.sans, color: C.goldSoft, fontSize: big ? 22 : 19, breakLine: true, paraSpaceAfter: 8 } },
+      { text: h.es, options: { fontFace: F.sans, color: C.mist, fontSize: big ? 20 : 17 } },
+    ],
+    { x: colX + 0.95, y: top, w: cw - 0.95, h: avail, valign: 'top', lineSpacingMultiple: 1.15 },
+  );
+  return s;
+}
+
+/** 사진 힌트 슬라이드: 어릴 적 사진들을 오른쪽에 나란히. photos: [{ path, ratio(w/h) }] */
+export function photoHintSlide(pres, meta, { kicker, current, total, title, photos }) {
+  const s = frame(pres, meta);
+  personColumn(pres, s, { kicker, progress: { current, total } });
+  const colX = 3.95, cw = W - M - colX;
+
+  s.addText('HINT · 힌트 · PISTA', {
+    x: colX, y: 0.95, w: 8, h: 0.45,
+    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
+  });
+  s.addText(
+    [
+      { text: title.ko, options: { ...LANG.ko, fontSize: 28, bold: true } },
+      { text: `   ${title.en} · ${title.es}`, options: { fontFace: F.sans, color: C.goldSoft, fontSize: 16 } },
+    ],
+    { x: colX, y: 1.4, w: cw, h: 0.6, valign: 'middle' },
+  );
+
+  // 같은 높이로 나란히, 전체 폭에 맞춰 높이 결정
+  const gap = 0.3, top = 2.15, maxH = 6.65 - top;
+  const sumR = photos.reduce((a, p) => a + p.ratio, 0);
+  const h = Math.min(maxH, (cw - gap * (photos.length - 1)) / sumR);
+  const totalW = h * sumR + gap * (photos.length - 1);
+  let x = colX + (cw - totalW) / 2;
+  const y = top + (maxH - h) / 2;
+  for (const p of photos) {
+    const w = h * p.ratio;
+    s.addShape(pres.ShapeType.rect, {
+      x: x - 0.06, y: y - 0.06, w: w + 0.12, h: h + 0.12, fill: { color: C.ivory }, line: { color: C.ivory },
+    });
+    s.addImage({ path: p.path, x, y, w, h });
+    x += w + gap;
+  }
+  return s;
+}
+
+/** 정답 공개: 왼쪽 큰 사진(아이보리 테두리) + 오른쪽 이름 세 언어 + 박수 유도. */
+export function revealSlide(pres, meta, { kicker, photo, name, cheer }) {
+  const s = frame(pres, meta);
+  s.addText(kicker, {
+    x: M, y: 0.95, w: 10, h: 0.45,
+    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
+  });
+  const top = 1.55, maxH = 6.65 - top, maxW = 6.0;
+  let h = maxH, w = h * photo.ratio;
+  if (w > maxW) { w = maxW; h = w / photo.ratio; }
+  const y = top + (maxH - h) / 2;
+  s.addShape(pres.ShapeType.rect, {
+    x: M - 0.08, y: y - 0.08, w: w + 0.16, h: h + 0.16, fill: { color: C.ivory }, line: { color: C.ivory },
+  });
+  s.addImage({ path: photo.path, x: M, y, w, h });
+
+  const tx = M + w + 0.6, tw = W - M - tx;
+  s.addText('IT’S…', {
+    x: tx, y: 1.7, w: tw, h: 0.6,
+    fontFace: F.latin, fontSize: 30, italic: true, color: C.goldSoft,
+  });
+  s.addText(name.ko, {
+    x: tx, y: 2.3, w: tw, h: 1.5,
+    fontFace: F.ko, fontSize: name.ko.length > 7 ? 38 : 46, bold: true, color: C.ivory, valign: 'top',
+  });
+  s.addText(
+    [
+      { text: name.en, options: { fontFace: F.latin, color: C.goldSoft, fontSize: 26, breakLine: true, paraSpaceAfter: 6 } },
+      { text: name.es, options: { fontFace: F.latin, color: C.mist, fontSize: 22 } },
+    ],
+    { x: tx, y: 3.85, w: tw, h: 1.4, valign: 'top', lineSpacingMultiple: 1.1 },
+  );
+  if (cheer) {
+    s.addShape(pres.ShapeType.roundRect, {
+      x: tx, y: 5.55, w: tw, h: 1.0, rectRadius: 0.12, fill: { color: C.gold }, line: { color: C.gold },
+    });
+    s.addText(
+      [
+        { text: cheer.ko, options: { fontFace: F.ko, color: C.pineDeep, fontSize: 22, bold: true, breakLine: true } },
+        { text: `${cheer.en} · ${cheer.es}`, options: { fontFace: F.latin, color: C.pineDeep, fontSize: 14 } },
+      ],
+      { x: tx, y: 5.55, w: tw, h: 1.0, align: 'center', valign: 'middle', lineSpacingMultiple: 1.05 },
+    );
+  }
+  return s;
+}
+
+/**
+ * 남은 이야기 (인터뷰용): 왼쪽 작은 사진 + 이름, 오른쪽에 질문/답 세 언어 목록, 아래 인터뷰 큐.
+ * items: [{ q: {ko,en,es}, a: {ko,en,es} }]
+ */
+export function storySlide(pres, meta, { kicker, photo, name, items, cue, cueIcon }) {
+  const s = frame(pres, meta);
+  s.addText(kicker, {
+    x: M, y: 0.95, w: 10, h: 0.45,
+    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
+  });
+  const pw = 2.9, ph = pw / photo.ratio;
+  s.addShape(pres.ShapeType.rect, {
+    x: M - 0.06, y: 1.55 - 0.06, w: pw + 0.12, h: ph + 0.12, fill: { color: C.ivory }, line: { color: C.ivory },
+  });
+  s.addImage({ path: photo.path, x: M, y: 1.55, w: pw, h: ph });
+  s.addText(
+    [
+      { text: name.ko, options: { fontFace: F.ko, color: C.ivory, fontSize: 24, bold: true, breakLine: true } },
+      { text: name.en, options: { fontFace: F.latin, color: C.goldSoft, fontSize: 14 } },
+    ],
+    { x: M, y: 1.55 + ph + 0.2, w: pw, h: 1.0, valign: 'top', lineSpacingMultiple: 1.1 },
+  );
+  const colX = 3.95, cw = W - M - colX;
+  s.addShape(pres.ShapeType.line, {
+    x: colX - 0.4, y: 1.6, w: 0, h: 4.7,
+    line: { color: C.goldSoft, width: 0.75, transparency: 60 },
+  });
+  const n = items.length;
+  const top = 1.45, bottom = cue ? 5.75 : 6.65;
+  const rowH = (bottom - top) / n;
+  items.forEach((it, i) => {
+    const y = top + i * rowH;
+    s.addText(
+      [
+        { text: `${it.q.ko}  ·  ${it.q.en}  ·  ${it.q.es}`, options: { fontFace: F.sans, color: C.gold, fontSize: 12, bold: true, charSpacing: 1, breakLine: true, paraSpaceAfter: 4 } },
+        { text: it.a.ko, options: { ...LANG.ko, fontSize: n >= 3 ? 24 : 28, bold: true, breakLine: true, paraSpaceAfter: 3 } },
+        { text: `${it.a.en}   ·   ${it.a.es}`, options: { fontFace: F.sans, color: C.mist, fontSize: n >= 3 ? 14 : 16 } },
+      ],
+      { x: colX, y, w: cw, h: rowH - 0.1, valign: 'top', lineSpacingMultiple: 1.08 },
+    );
+  });
+  if (cue) {
+    const cy = 5.95;
+    s.addShape(pres.ShapeType.roundRect, {
+      x: colX, y: cy, w: cw, h: 0.7, rectRadius: 0.1,
+      fill: { color: C.pineDeep }, line: { color: C.goldSoft, width: 0.75, transparency: 40 },
+    });
+    if (cueIcon) s.addImage({ path: cueIcon, x: colX + 0.15, y: cy + 0.17, w: 0.36, h: 0.36 });
+    s.addText(
+      [
+        { text: cue.ko, options: { fontFace: F.sans, color: C.ivory, fontSize: 14, bold: true } },
+        { text: `   ${cue.en} · ${cue.es}`, options: { fontFace: F.sans, color: C.goldSoft, fontSize: 12 } },
+      ],
+      { x: colX + 0.6, y: cy, w: cw - 0.7, h: 0.7, valign: 'middle', lineSpacingMultiple: 1.05 },
+    );
+  }
+  return s;
+}

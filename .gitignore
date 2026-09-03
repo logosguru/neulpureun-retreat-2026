@@ -47,3 +47,6 @@ scripts/form_import/out/
 # 로컬 도구 산출물 (커밋 금지)
 .playwright-mcp/
 scratchpad/
+
+# 아이스브레이커 Game 03 대상자 개인 사진 (공개 repo — 커밋 금지)
+scripts/icebreaker/people/

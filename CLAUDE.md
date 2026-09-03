@@ -15,7 +15,8 @@
   사이트 헤더/푸터 없는 전용 화면(`[locale]/schedule/page.tsx` + `PublicSchedule`), 모바일 우선,
   설명·장소 항상 노출, 수련회 기간 중 **'지금/다음' 순서 강조 + 자동 스크롤**(`lib/schedule-now.ts`, 뉴욕 시각 기준).
   기존 홈 `#schedule` 섹션과 헤더 나브는 그대로. 인쇄용 QR = `public/qr/schedule-{ko,en,es}.{svg,png}` (`npm run qr`).
-- **🎤 아이스브레이커 덱 (2026-09-03)**: Game 01 가위바위보·02 Group Up! pptx 완료 → `docs/icebreaker/`. **다음 = Game 03 Who Is It? · 04 Generations Challenge** 를 `scripts/icebreaker/0N-*.mjs` 로 같은 빌더(`theme.mjs`)·3언어 규칙으로. 기획 PDF는 사용자 ~/Downloads.
+- **🎤 아이스브레이커 덱 (2026-09-03)**: Game 01 가위바위보·02 Group Up! 완료, **Game 03 Who Is It? 은 1인(김지미 집사) 템플릿 완성** → `docs/icebreaker/`. 순서는 프로그램 한 장 기준(3=Who Is It?, 4=Generations Challenge; 상세 PDF 파일명 번호는 반대라 무시).
+  **다음** = Game 03 에 나머지 대상자 4명 추가(`scripts/icebreaker/03-whoisit.mjs` 의 `PEOPLE` 배열에 힌트·사진·정답·남은 이야기), 그다음 Game 04 Generations Challenge(`04-generations.mjs`). 개인 사진은 `scripts/icebreaker/people/<id>/` (gitignore — 공개 repo). 기획 PDF는 사용자 ~/Downloads.
 - **다음(선택)**: 실제 매직링크 수신 최종 확인, 필요 시 실 등록 데이터 관리. 새 기능은 **brainstorming → spec → writing-plans → subagent-driven** 패턴 유지.
 - **배포·로컬 운영 상세(Supabase/Resend/Turnstile/Route53 구성, Vercel env 6개, 로컬 재기동, prod 덤프)** → 스킬 `deploy-ops`. ⚠️ Vercel env 추가/수정 후 반드시 Redeploy.
 
@@ -74,7 +75,7 @@ npm run lint     # ESLint (Next 16엔 next lint 없음 → eslint 직접 실행)
 npx tsc --noEmit # 타입체크
 npm test         # node --test (src/**/*.test.ts)
 npm run qr       # 이름표용 언어별 일정 QR 재생성 → public/qr/ (라벨 없음 svg·png + -labeled.png)
-npm run icebreaker:01 / icebreaker:02 # 아이스브레이커 Game 01(가위바위보)·02(Group Up!) pptx → out/icebreaker/ (한/영/서)
+npm run icebreaker:01 / :02 / :03  # 아이스브레이커 Game 01(가위바위보)·02(Group Up!)·03(Who Is It?) pptx → out/icebreaker/ (한/영/서)
 sh scripts/icebreaker/render.sh out/icebreaker/icebreaker-01-rps.pptx   # LibreOffice+pdftoppm 로 슬라이드별 PNG 검증
 ```
 
@@ -120,7 +121,9 @@ src/
           *-actions.ts             # 관리자 서버 액션 (setPaid/setLanguage · 객실 · assignRoom · 일정 · FAQ)
 scripts/generate-qr.mjs          # `npm run qr` — 이름표용 언어별 일정 QR (devDep: qrcode, sharp)
 scripts/icebreaker/              # 첫날 저녁 아이스브레이커 슬라이드(pptxgenjs). theme.mjs = 사이트 다크 테마 토큰 + 3개 언어 빌더
-                                 #   (한국어 아이보리 → English 골드 → Español 미스트, 순서·색 고정), 01-rps.mjs = 가위바위보 덱 콘텐츠.
+                                 #   (한국어 아이보리 → English 골드 → Español 미스트, 순서·색 고정). 0N-*.mjs = 덱별 콘텐츠.
+                                 #   03 Who Is It? 레이아웃 = hintSlide(이전 힌트 위에 흐리게 누적)·photoHintSlide·revealSlide·storySlide.
+                                 #   people/<id>/ = 대상자 개인 사진 (gitignore, 공개 repo) — 빌드 시 sharp 로 1600px 축소해 out/ 에서 사용.
                                  #   폰트는 Google Fonts 이름(Fraunces·Nanum Myeongjo·Noto Sans KR)만 써서 Google Slides 업로드 시 그대로 매핑.
                                  #   이모지는 글자 대신 assets/emoji-*.png(Noto Emoji) 이미지 — 앱마다 그림이 달라지는 것 방지.
                                  #   render.sh: brew LibreOffice 는 헤드리스에서 macOS 사용자 폰트를 못 보므로 전용 프로필 user/fonts 에 복사해 렌더.
