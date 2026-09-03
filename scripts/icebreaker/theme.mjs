@@ -348,32 +348,42 @@ export function hintSlide(pres, meta, { kicker, hints, current }) {
     fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
   });
 
-  const prevH = 0.72;
-  let y = 1.45;
-  for (let i = 0; i < current - 1; i++) {
+  // 이전 힌트(흐리게 누적): 개수가 많아질수록 한 행을 낮게 — 7개 힌트까지 수용
+  const prev = current - 1;
+  const prevH = prev >= 6 ? 0.45 : prev >= 5 ? 0.5 : prev >= 3 ? 0.6 : 0.72;
+  const prevKo = prev >= 5 ? 12 : prev >= 3 ? 13 : 15;
+  let y = prev >= 6 ? 1.38 : 1.45;
+  for (let i = 0; i < prev; i++) {
     const h = hints[i];
+    // 영어+스페인어가 한 줄에 안 들어갈 만큼 길면 두 줄로 나누고 행을 조금 높인다
+    const split = (h.en.length + h.es.length) > 105;
+    const rowH = prevH + (split ? prevH * 0.36 : 0);
     s.addShape(pres.ShapeType.ellipse, {
-      x: colX, y: y + 0.08, w: 0.4, h: 0.4, fill: { color: C.pine }, line: { color: C.goldSoft, width: 1 },
+      x: colX, y: y + 0.06, w: 0.36, h: 0.36, fill: { color: C.pine }, line: { color: C.goldSoft, width: 1 },
     });
     s.addText(String(i + 1), {
-      x: colX, y: y + 0.08, w: 0.4, h: 0.4, align: 'center', valign: 'middle',
-      fontFace: F.latin, fontSize: 14, bold: true, color: C.goldSoft,
+      x: colX, y: y + 0.06, w: 0.36, h: 0.36, align: 'center', valign: 'middle',
+      fontFace: F.latin, fontSize: 12, bold: true, color: C.goldSoft,
     });
+    const sub = { fontFace: F.sans, color: C.mistDim, fontSize: prevKo - 3 };
     s.addText(
       [
-        { text: h.ko, options: { fontFace: F.sans, color: C.mist, fontSize: 15, breakLine: true } },
-        { text: `${h.en}   ·   ${h.es}`, options: { fontFace: F.sans, color: C.mistDim, fontSize: 11 } },
+        { text: h.ko, options: { fontFace: F.sans, color: C.mist, fontSize: prevKo, breakLine: true } },
+        ...(split
+          ? [{ text: h.en, options: { ...sub, breakLine: true } }, { text: h.es, options: sub }]
+          : [{ text: `${h.en}   ·   ${h.es}`, options: sub }]),
       ],
-      { x: colX + 0.6, y, w: cw - 0.6, h: prevH, valign: 'top', lineSpacingMultiple: 1.05 },
+      { x: colX + 0.55, y, w: cw - 0.55, h: rowH, valign: 'top', lineSpacingMultiple: 1.0 },
     );
-    y += prevH;
+    y += rowH;
   }
 
   // 현재 힌트 — 남은 높이를 전부 쓴다
   const h = hints[current - 1];
-  const top = y + (current > 1 ? 0.2 : 0);
+  const top = y + (current > 1 ? (prev >= 6 ? 0.1 : 0.2) : 0);
   const avail = 6.65 - top;
-  const big = current <= 2; // 위에 쌓인 것이 적을수록 크게
+  // 위에 쌓인 것이 많을수록 작게 (3단계)
+  const sz = prev <= 1 ? [34, 22, 20] : prev <= 4 ? [28, 19, 17] : prev <= 5 ? [24, 17, 15] : [22, 16, 14];
   s.addShape(pres.ShapeType.ellipse, {
     x: colX, y: top + 0.12, w: 0.7, h: 0.7, fill: { color: C.gold }, line: { color: C.gold },
   });
@@ -383,48 +393,38 @@ export function hintSlide(pres, meta, { kicker, hints, current }) {
   });
   s.addText(
     [
-      { text: h.ko, options: { ...LANG.ko, fontSize: big ? 34 : 28, bold: true, breakLine: true, paraSpaceAfter: 14 } },
-      { text: h.en, options: { fontFace: F.sans, color: C.goldSoft, fontSize: big ? 22 : 19, breakLine: true, paraSpaceAfter: 8 } },
-      { text: h.es, options: { fontFace: F.sans, color: C.mist, fontSize: big ? 20 : 17 } },
+      { text: h.ko, options: { ...LANG.ko, fontSize: sz[0], bold: true, breakLine: true, paraSpaceAfter: prev >= 5 ? 8 : 14 } },
+      { text: h.en, options: { fontFace: F.sans, color: C.goldSoft, fontSize: sz[1], breakLine: true, paraSpaceAfter: prev >= 5 ? 4 : 8 } },
+      { text: h.es, options: { fontFace: F.sans, color: C.mist, fontSize: sz[2] } },
     ],
     { x: colX + 0.95, y: top, w: cw - 0.95, h: avail, valign: 'top', lineSpacingMultiple: 1.15 },
   );
   return s;
 }
 
-/** 사진 힌트 슬라이드: 어릴 적 사진들을 오른쪽에 나란히. photos: [{ path, ratio(w/h) }] */
-export function photoHintSlide(pres, meta, { kicker, current, total, title, photos }) {
+/** 사진 힌트 슬라이드: 어릴 적 사진 한 장을 가능한 한 크게(전체 폭). photo: { path, ratio(w/h) } */
+export function photoSlide(pres, meta, { kicker, current, total, title, photo }) {
   const s = frame(pres, meta);
-  personColumn(pres, s, { kicker, progress: { current, total } });
-  const colX = 3.95, cw = W - M - colX;
-
-  s.addText('HINT · 힌트 · PISTA', {
-    x: colX, y: 0.95, w: 8, h: 0.45,
+  s.addText(kicker, {
+    x: M, y: 0.95, w: 4, h: 0.45,
     fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
   });
   s.addText(
     [
-      { text: title.ko, options: { ...LANG.ko, fontSize: 28, bold: true } },
-      { text: `   ${title.en} · ${title.es}`, options: { fontFace: F.sans, color: C.goldSoft, fontSize: 16 } },
+      { text: `HINT ${current} / ${total}   `, options: { fontFace: F.latin, color: C.gold, fontSize: 16, charSpacing: 2 } },
+      { text: title.ko, options: { ...LANG.ko, fontSize: 22, bold: true } },
+      { text: `   ${title.en} · ${title.es}`, options: { fontFace: F.sans, color: C.goldSoft, fontSize: 14 } },
     ],
-    { x: colX, y: 1.4, w: cw, h: 0.6, valign: 'middle' },
+    { x: 4.6, y: 0.95, w: W - M - 4.6, h: 0.45, align: 'right', valign: 'middle' },
   );
-
-  // 같은 높이로 나란히, 전체 폭에 맞춰 높이 결정
-  const gap = 0.3, top = 2.15, maxH = 6.65 - top;
-  const sumR = photos.reduce((a, p) => a + p.ratio, 0);
-  const h = Math.min(maxH, (cw - gap * (photos.length - 1)) / sumR);
-  const totalW = h * sumR + gap * (photos.length - 1);
-  let x = colX + (cw - totalW) / 2;
-  const y = top + (maxH - h) / 2;
-  for (const p of photos) {
-    const w = h * p.ratio;
-    s.addShape(pres.ShapeType.rect, {
-      x: x - 0.06, y: y - 0.06, w: w + 0.12, h: h + 0.12, fill: { color: C.ivory }, line: { color: C.ivory },
-    });
-    s.addImage({ path: p.path, x, y, w, h });
-    x += w + gap;
-  }
+  const top = 1.5, maxH = 6.7 - top, maxW = W - 2 * M;
+  let h = maxH, w = h * photo.ratio;
+  if (w > maxW) { w = maxW; h = w / photo.ratio; }
+  const x = M + (maxW - w) / 2, y = top + (maxH - h) / 2;
+  s.addShape(pres.ShapeType.rect, {
+    x: x - 0.08, y: y - 0.08, w: w + 0.16, h: h + 0.16, fill: { color: C.ivory }, line: { color: C.ivory },
+  });
+  s.addImage({ path: photo.path, x, y, w, h });
   return s;
 }
 
@@ -470,65 +470,6 @@ export function revealSlide(pres, meta, { kicker, photo, name, cheer }) {
         { text: `${cheer.en} · ${cheer.es}`, options: { fontFace: F.latin, color: C.pineDeep, fontSize: 14 } },
       ],
       { x: tx, y: 5.55, w: tw, h: 1.0, align: 'center', valign: 'middle', lineSpacingMultiple: 1.05 },
-    );
-  }
-  return s;
-}
-
-/**
- * 남은 이야기 (인터뷰용): 왼쪽 작은 사진 + 이름, 오른쪽에 질문/답 세 언어 목록, 아래 인터뷰 큐.
- * items: [{ q: {ko,en,es}, a: {ko,en,es} }]
- */
-export function storySlide(pres, meta, { kicker, photo, name, items, cue, cueIcon }) {
-  const s = frame(pres, meta);
-  s.addText(kicker, {
-    x: M, y: 0.95, w: 10, h: 0.45,
-    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
-  });
-  const pw = 2.9, ph = pw / photo.ratio;
-  s.addShape(pres.ShapeType.rect, {
-    x: M - 0.06, y: 1.55 - 0.06, w: pw + 0.12, h: ph + 0.12, fill: { color: C.ivory }, line: { color: C.ivory },
-  });
-  s.addImage({ path: photo.path, x: M, y: 1.55, w: pw, h: ph });
-  s.addText(
-    [
-      { text: name.ko, options: { fontFace: F.ko, color: C.ivory, fontSize: 24, bold: true, breakLine: true } },
-      { text: name.en, options: { fontFace: F.latin, color: C.goldSoft, fontSize: 14 } },
-    ],
-    { x: M, y: 1.55 + ph + 0.2, w: pw, h: 1.0, valign: 'top', lineSpacingMultiple: 1.1 },
-  );
-  const colX = 3.95, cw = W - M - colX;
-  s.addShape(pres.ShapeType.line, {
-    x: colX - 0.4, y: 1.6, w: 0, h: 4.7,
-    line: { color: C.goldSoft, width: 0.75, transparency: 60 },
-  });
-  const n = items.length;
-  const top = 1.45, bottom = cue ? 5.75 : 6.65;
-  const rowH = (bottom - top) / n;
-  items.forEach((it, i) => {
-    const y = top + i * rowH;
-    s.addText(
-      [
-        { text: `${it.q.ko}  ·  ${it.q.en}  ·  ${it.q.es}`, options: { fontFace: F.sans, color: C.gold, fontSize: 12, bold: true, charSpacing: 1, breakLine: true, paraSpaceAfter: 4 } },
-        { text: it.a.ko, options: { ...LANG.ko, fontSize: n >= 3 ? 24 : 28, bold: true, breakLine: true, paraSpaceAfter: 3 } },
-        { text: `${it.a.en}   ·   ${it.a.es}`, options: { fontFace: F.sans, color: C.mist, fontSize: n >= 3 ? 14 : 16 } },
-      ],
-      { x: colX, y, w: cw, h: rowH - 0.1, valign: 'top', lineSpacingMultiple: 1.08 },
-    );
-  });
-  if (cue) {
-    const cy = 5.95;
-    s.addShape(pres.ShapeType.roundRect, {
-      x: colX, y: cy, w: cw, h: 0.7, rectRadius: 0.1,
-      fill: { color: C.pineDeep }, line: { color: C.goldSoft, width: 0.75, transparency: 40 },
-    });
-    if (cueIcon) s.addImage({ path: cueIcon, x: colX + 0.15, y: cy + 0.17, w: 0.36, h: 0.36 });
-    s.addText(
-      [
-        { text: cue.ko, options: { fontFace: F.sans, color: C.ivory, fontSize: 14, bold: true } },
-        { text: `   ${cue.en} · ${cue.es}`, options: { fontFace: F.sans, color: C.goldSoft, fontSize: 12 } },
-      ],
-      { x: colX + 0.6, y: cy, w: cw - 0.7, h: 0.7, valign: 'middle', lineSpacingMultiple: 1.05 },
     );
   }
   return s;

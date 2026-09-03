@@ -1,11 +1,11 @@
 // Ice Breaker Game 03 — Who Is It? Evergreen Edition · 나는 누구일까요? (한/영/서 3개 언어)
 // 실행: npm run icebreaker:03  → out/icebreaker/icebreaker-03-whoisit.pptx
-// 대상자 데이터는 아래 PEOPLE 배열 — 한 사람 = 힌트(넓게→구체적으로) + 어릴 적 사진 + 정답 + 남은 이야기(인터뷰용).
+// 대상자 데이터는 아래 PEOPLE 배열 — 한 사람 = 힌트 7개(7문항 답 전부, 넓게→구체적으로) + 어릴 적 사진(장당 한 슬라이드) + 정답.
 // 사진은 scripts/icebreaker/people/<id>/ (gitignore — 공개 repo 이므로 개인 사진 커밋 금지).
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import { C, F, W, newDeck, frame, headline, trilingual, rulesSlide, cueSlide, hintSlide, photoHintSlide, revealSlide, storySlide } from './theme.mjs';
+import { C, F, W, newDeck, frame, headline, trilingual, rulesSlide, cueSlide, hintSlide, photoSlide, revealSlide } from './theme.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const OUT = path.join(ROOT, 'out/icebreaker');
@@ -25,7 +25,7 @@ async function photo(id, file) {
 
 // ─── 대상자 ──────────────────────────────────────────────────────────────────
 // 질문지(7문항): 1 좋아하는 음식 · 2 태어난 곳 · 3 성도들이 모를 의외의 사실 · 4 처음 온 때 · 5 봉사/소속 · 6 좋아하는 장소·시간 · 7 삶의 모토
-// 힌트는 여러 사람에 해당될 만한 것부터 → 아는 사람이면 맞힐 것까지. 남은 답은 정답 후 인터뷰 소재.
+// 7문항 답을 전부 힌트로 쓴다. 순서만 여러 사람에 해당될 만한 것부터 → 아는 사람이면 맞힐 것으로.
 const PEOPLE = [
   {
     id: '01-kim-jimi',
@@ -34,21 +34,19 @@ const PEOPLE = [
       { ko: '제 삶의 모토는 — “현재에 만족하고 최선을 다하자”', en: 'My life motto: “Be content with today, and give it my best.”', es: 'Mi lema: «Estar en paz con el presente y dar lo mejor de mí».' },
       { ko: '가장 좋아하는 음식은 냉면입니다.', en: 'My favorite food is naengmyeon — Korean cold noodles.', es: 'Mi comida favorita es el naengmyeon, fideos fríos coreanos.' },
       { ko: '경기도 안성에서 태어났습니다.', en: 'I was born in Anseong, Gyeonggi Province, Korea.', es: 'Nací en Anseong, provincia de Gyeonggi, Corea.' },
-      { ko: '미국 사람과 결혼해서 영어를 잘할 것 같지만… 사실 영어를 잘 못 합니다!', en: 'I married an American, so you’d think my English is great… it’s not!', es: 'Me casé con un estadounidense, así que pensarías que hablo bien inglés… ¡pues no!' },
+      { ko: '좋아하는 곳은 시온성전, 좋아하는 시간은 점심 교제와 구역예배입니다.', en: 'Favorite place: the Zion Sanctuary. Favorite time: lunch fellowship and district worship.', es: 'Lugar favorito: el Santuario Sion. Momento favorito: el almuerzo y el culto de distrito.' },
+      { ko: '지금은 관리부에서 봉사하고 있습니다.', en: 'I currently serve on the Facilities Team.', es: 'Actualmente sirvo en el equipo de mantenimiento.' },
+      { ko: '늘푸른교회에 처음 온 것은 2018년 8월입니다.', en: 'I first came to Evergreen in August 2018.', es: 'Llegué a Evergreen por primera vez en agosto de 2018.' },
+      { ko: '미국 사람과 결혼해서 영어를 잘할 것 같지만… 사실 잘 못 합니다!', en: 'I married an American, so you’d think my English is great… it’s not!', es: 'Me casé con un estadounidense — pensarías que hablo bien inglés… ¡pues no!' },
     ],
-    photoHint: { title: { ko: '어릴 적 모습입니다!', en: 'Childhood photos', es: 'Fotos de la infancia' }, files: ['family.jpg', 'solo.jpg'] },
+    photos: ['family.jpg', 'solo.jpg'], // 마지막 힌트들 — 한 장당 한 슬라이드
     reveal: { file: 'solo.jpg', name: { ko: '김지미 집사님', en: 'Deacon Jimi Kim', es: 'Diaconisa Jimi Kim' } },
-    story: [
-      { q: { ko: '늘푸른교회에 처음 온 때', en: 'First came to Evergreen', es: 'Primera vez en Evergreen' }, a: { ko: '2018년 8월', en: 'August 2018', es: 'Agosto de 2018' } },
-      { q: { ko: '봉사하는 곳', en: 'Where I serve', es: 'Dónde sirvo' }, a: { ko: '관리부', en: 'Facilities Team', es: 'Equipo de mantenimiento' } },
-      { q: { ko: '좋아하는 장소 · 시간', en: 'Favorite place & time', es: 'Lugar y momento favoritos' }, a: { ko: '시온성전 · 점심식사 때의 교제와 구역예배', en: 'Zion Sanctuary · lunch fellowship & district worship', es: 'Santuario Sion · la comunión del almuerzo y el culto de distrito' } },
-    ],
   },
 ];
 
 const EYEBROW = 'ICE BREAKER · GAME 03';
 const pres = newDeck();
-const perPerson = (p) => p.hints.length + (p.photoHint ? 1 : 0) + 2; // 힌트들 + 사진 + 정답 + 남은 이야기
+const perPerson = (p) => p.hints.length + p.photos.length + 1; // 힌트들 + 사진들 + 정답
 const TOTAL = 3 + PEOPLE.reduce((a, p) => a + perPerson(p), 0) + 1;
 let n = 0;
 const meta = () => ({ eyebrow: EYEBROW, pageNo: ++n, total: TOTAL });
@@ -78,10 +76,9 @@ const meta = () => ({ eyebrow: EYEBROW, pageNo: ++n, total: TOTAL });
 cueSlide(pres, meta(), {
   kicker: 'HOW IT WORKS · 방식 · CÓMO FUNCIONA',
   items: [
-    { image: asset('mag'), word: 'HINT', sub: '힌트가 하나씩 공개\nLas pistas salen una a una' },
+    { image: asset('mag'), word: 'HINT', sub: '힌트가 하나씩 공개됩니다\nLas pistas salen una a una' },
     { image: asset('hand'), word: 'GUESS', sub: '손 들기 → MC 지목 → 이름!\nMano arriba → el MC elige → ¡nombre!' },
-    { image: asset('camera'), word: 'REVEAL', sub: '정답 공개 — 앞으로!\nSe revela — ¡al frente!' },
-    { image: asset('mic'), word: 'STORY', sub: '남은 이야기 + 짧은 인터뷰\nEl resto de la historia + entrevista' },
+    { image: asset('camera'), word: 'REVEAL', sub: '정답 공개 — 앞으로 나와 주세요!\nSe revela — ¡pase al frente!' },
   ],
   footer: {
     ko: '정답을 맞힌 분에게 Gift Card 한 장! 힌트마다 2~3명만 기회가 있으니 신중하게 손드세요.',
@@ -100,29 +97,23 @@ rulesSlide(pres, meta(), {
   ],
 });
 
-// 4~. 대상자별: 힌트 → 사진 힌트 → 정답 → 남은 이야기
+// 4~. 대상자별: 힌트 7개 → 어릴 적 사진(장당 한 슬라이드) → 정답
 for (const p of PEOPLE) {
   const kicker = p.label.en.toUpperCase();
-  const total = p.hints.length + (p.photoHint ? 1 : 0);
+  const total = p.hints.length + p.photos.length;
   for (let i = 1; i <= p.hints.length; i++) hintSlide(pres, meta(), { kicker, hints: p.hints, current: i });
-  if (p.photoHint) {
-    const photos = await Promise.all(p.photoHint.files.map((f) => photo(p.id, f)));
-    photoHintSlide(pres, meta(), { kicker, current: total, total, title: p.photoHint.title, photos });
+  for (let j = 0; j < p.photos.length; j++) {
+    photoSlide(pres, meta(), {
+      kicker, current: p.hints.length + j + 1, total,
+      title: { ko: '어릴 적 모습입니다!', en: 'Childhood photo', es: 'Foto de la infancia' },
+      photo: await photo(p.id, p.photos[j]),
+    });
   }
-  const rp = await photo(p.id, p.reveal.file);
   revealSlide(pres, meta(), {
-    kicker: `${p.label.en.toUpperCase()} · 정답은 · LA RESPUESTA`,
-    photo: rp,
+    kicker: `${kicker} · 정답은 · LA RESPUESTA`,
+    photo: await photo(p.id, p.reveal.file),
     name: p.reveal.name,
     cheer: { ko: '큰 박수! 앞으로 나와 주세요', en: 'Applause! Please come up', es: '¡Aplausos! Pase al frente' },
-  });
-  storySlide(pres, meta(), {
-    kicker: 'THE REST OF THE STORY · 남은 이야기',
-    photo: rp,
-    name: p.reveal.name,
-    items: p.story,
-    cue: { ko: '짧은 인터뷰 45~60초 — 가장 재미있는 한두 가지만!', en: 'Mini interview, 45–60 s — pick the 1–2 best', es: 'Mini entrevista, 45–60 s — solo lo mejor' },
-    cueIcon: asset('mic'),
   });
 }
 
