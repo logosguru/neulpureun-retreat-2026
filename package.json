@@ -12,7 +12,8 @@
     "icebreaker:01": "node scripts/icebreaker/01-rps.mjs",
     "icebreaker:02": "node scripts/icebreaker/02-groupup.mjs",
     "icebreaker:03": "node scripts/icebreaker/03-whoisit.mjs",
-    "icebreaker:04": "node scripts/icebreaker/04-generations.mjs"
+    "icebreaker:04": "node scripts/icebreaker/04-generations.mjs",
+    "lunch": "node scripts/lunch-groups/build.mjs && \"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf=out/lunch/lunch-groups.pdf out/lunch/lunch-groups.html"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
