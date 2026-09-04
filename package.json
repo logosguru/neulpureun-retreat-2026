@@ -11,7 +11,8 @@
     "qr": "node scripts/generate-qr.mjs",
     "icebreaker:01": "node scripts/icebreaker/01-rps.mjs",
     "icebreaker:02": "node scripts/icebreaker/02-groupup.mjs",
-    "icebreaker:03": "node scripts/icebreaker/03-whoisit.mjs"
+    "icebreaker:03": "node scripts/icebreaker/03-whoisit.mjs",
+    "icebreaker:04": "node scripts/icebreaker/04-generations.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

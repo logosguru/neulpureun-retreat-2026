@@ -474,3 +474,62 @@ export function revealSlide(pres, meta, { kicker, photo, name, cheer }) {
   }
   return s;
 }
+
+// ───────────────────────────── Game 04 · Generations Challenge ─────────────────────────────
+
+/** 문제 슬라이드(설명자용): 상단 팀/번호 + 카테고리, 가운데 세 언어 정답 단어 아주 크게. */
+export function promptSlide(pres, meta, { team, n, total, heading, category, prompt }) {
+  const s = frame(pres, meta);
+  s.addText(heading ?? `TEAM ${team}  ·  ${n} / ${total}`, {
+    x: M, y: 0.95, w: 6, h: 0.5,
+    fontFace: F.latin, fontSize: 20, color: C.gold, charSpacing: 3,
+  });
+  s.addText(
+    [
+      { text: category.ko, options: { fontFace: F.sans, color: C.goldSoft, fontSize: 18, bold: true } },
+      { text: `  ·  ${category.en}  ·  ${category.es}`, options: { fontFace: F.sans, color: C.mistDim, fontSize: 14 } },
+    ],
+    { x: 5.5, y: 0.95, w: W - M - 5.5, h: 0.5, align: 'right', valign: 'middle' },
+  );
+  const koSize = prompt.ko.length > 10 ? 60 : prompt.ko.length > 6 ? 76 : 96;
+  s.addText(prompt.ko, {
+    x: M, y: 1.7, w: W - 2 * M, h: 2.6, align: 'center', valign: 'middle',
+    fontFace: F.ko, fontSize: koSize, bold: true, color: C.ivory,
+  });
+  s.addText(prompt.en, {
+    x: M, y: 4.35, w: W - 2 * M, h: 0.95, align: 'center', valign: 'middle',
+    fontFace: F.latin, fontSize: prompt.en.length > 24 ? 36 : 44, color: C.goldSoft,
+  });
+  s.addText(prompt.es, {
+    x: M, y: 5.3, w: W - 2 * M, h: 0.8, align: 'center', valign: 'middle',
+    fontFace: F.latin, fontSize: prompt.es.length > 28 ? 26 : 32, color: C.mist,
+  });
+  s.addText('정답자는 화면을 보지 않습니다 · Guessers face away · Los adivinadores no miran', {
+    x: M, y: 6.3, w: W - 2 * M, h: 0.4, align: 'center',
+    fontFace: F.sans, fontSize: 12, italic: true, color: C.mistDim,
+  });
+  return s;
+}
+
+/** 큰 단어 한 장(팀 시작·시간 종료 등): 왼쪽 이미지, 가운데 큰 글자 + 세 언어 한 줄씩. */
+export function bigWordSlide(pres, meta, { kicker, image, big, bigSize = 110, lines, sub }) {
+  const s = frame(pres, meta);
+  s.addText(kicker, {
+    x: M, y: 0.95, w: 10, h: 0.45,
+    fontFace: F.latin, fontSize: 18, color: C.gold, charSpacing: 3,
+  });
+  if (image) s.addImage({ path: image, x: M + 0.2, y: 2.0, w: 2.4, h: 2.4 });
+  const tx = image ? 3.6 : M, tw = W - M - tx;
+  s.addText(big, {
+    x: tx, y: 1.45, w: tw, h: 2.2, valign: 'middle',
+    fontFace: F.latin, fontSize: bigSize, bold: true, color: C.ivory,
+  });
+  if (lines) trilingual(s, lines, { x: tx, y: 3.8, w: tw, h: 1.9, size: 22, gap: 4 });
+  if (sub) {
+    s.addText(sub, {
+      x: tx, y: 5.8, w: tw, h: 0.7, valign: 'middle',
+      fontFace: F.latin, fontSize: 28, bold: true, color: C.gold, charSpacing: 1,
+    });
+  }
+  return s;
+}
