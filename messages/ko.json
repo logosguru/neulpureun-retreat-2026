@@ -516,5 +516,21 @@
   "Footer": {
     "copyright": "© 2026 늘푸른교회 (New York Evergreen Presbyterian Church)",
     "adminLogin": "관리자 로그인"
+  },
+  "Lunch": {
+    "metaTitle": "주일 점심 식사 테이블 · 복된 만남 2026",
+    "title": "주일 점심 식사 테이블",
+    "subtitle": "9월 6일(주일) 12:00 · Gala Hall",
+    "notice": "본인 이름을 찾아 해당 번호의 테이블에 앉아 주세요. 새로운 만남의 자리입니다.",
+    "searchPlaceholder": "이름 검색 (한글 또는 영문)",
+    "results": "검색 결과 {n}명",
+    "noResults": "일치하는 이름이 없습니다. 다른 표기로 검색해 보시거나 안내 봉사자에게 문의해 주세요.",
+    "tabByTable": "테이블별",
+    "tabByName": "이름순",
+    "tableLabel": "Table {n}",
+    "count": "{n}명",
+    "total": "총 {tables}테이블 · {n}명",
+    "viewSchedule": "전체 일정 보기",
+    "otherLanguages": "다른 언어로 보기"
   }
 }

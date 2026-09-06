@@ -516,5 +516,21 @@
   "Footer": {
     "copyright": "© 2026 New York Evergreen Presbyterian Church",
     "adminLogin": "Acceso de administrador"
+  },
+  "Lunch": {
+    "metaTitle": "Mesas del almuerzo dominical · Encuentro Bendito 2026",
+    "title": "Mesas del almuerzo dominical",
+    "subtitle": "Dom 6 de sep · 12:00 PM · Gala Hall",
+    "notice": "Busque su nombre y siéntese en la mesa con ese número. Es una oportunidad para conocer a alguien nuevo.",
+    "searchPlaceholder": "Busque su nombre (inglés o coreano)",
+    "results": "{n} resultado(s)",
+    "noResults": "No hay coincidencias. Pruebe otra forma de escribirlo o pregunte a un voluntario.",
+    "tabByTable": "Por mesa",
+    "tabByName": "Por nombre",
+    "tableLabel": "Mesa {n}",
+    "count": "{n} personas",
+    "total": "{tables} mesas · {n} personas",
+    "viewSchedule": "Ver el programa completo",
+    "otherLanguages": "Otros idiomas"
   }
 }

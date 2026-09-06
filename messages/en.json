@@ -516,5 +516,21 @@
   "Footer": {
     "copyright": "© 2026 New York Evergreen Presbyterian Church",
     "adminLogin": "Admin login"
+  },
+  "Lunch": {
+    "metaTitle": "Sunday Lunch Tables · Blessed Encounter 2026",
+    "title": "Sunday Lunch Tables",
+    "subtitle": "Sun, Sep 6 · 12:00 PM · Gala Hall",
+    "notice": "Find your name and take a seat at that table number. It's a chance to meet someone new.",
+    "searchPlaceholder": "Search your name (English or Korean)",
+    "results": "{n} result(s)",
+    "noResults": "No matching name. Try another spelling or ask a volunteer.",
+    "tabByTable": "By table",
+    "tabByName": "By name",
+    "tableLabel": "Table {n}",
+    "count": "{n} people",
+    "total": "{tables} tables · {n} people",
+    "viewSchedule": "View full schedule",
+    "otherLanguages": "Other languages"
   }
 }
